@@ -106,3 +106,8 @@ CakeLog::config('error', array(
 	'types' => array('warning', 'error', 'critical', 'alert', 'emergency'),
 	'file' => 'error',
 ));
+
+// 定数
+define('FILE_TEMPLATE', 'C:\tmp_barcord/');
+define('FILE_BARCORD', 'C:\tmp_barcord/barcode/');
+define('FILE_PDF', 'C:\tmp_barcord/pdf/');

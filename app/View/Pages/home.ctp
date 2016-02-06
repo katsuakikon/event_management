@@ -1,3 +1,3 @@
 <section>
-	<h1>HTML5　試験を開始します</h1>
+	<h1>管理メニュー</h1>
 </section>
