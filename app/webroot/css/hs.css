@@ -1,0 +1,49 @@
+#q_contents {
+	width: 80%;
+	margin: 0 auto 10px;
+}
+
+#result {
+	font-size: 220%;
+	color: red;
+	margin: 100px auto 100px;
+}
+
+.pull-right {
+	float: right;
+	margin-bottom: 10px; 
+}
+
+.pull-right p {
+	text-align: right;
+	margin: 2px 0;
+	padding: 0 0;
+}
+
+fieldset legend {
+	color: #000000;
+	font-size: 120%;
+}
+
+.q_text {
+	width:100%;
+	font-size: 120%;
+	clear:right;
+}
+
+input[type=button] {
+	width: 150px;
+	height: 30px;
+	font-size: 100%;
+	padding: 0;
+}
+
+.ok {
+	font-size: 120%;
+	color: #0000FF;
+}
+
+.miss {
+	font-size: 120%;
+	color: #FF0000;
+}
