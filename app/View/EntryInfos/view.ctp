@@ -1,5 +1,5 @@
 <div class="entryInfos view">
-<h2><?php echo __('Entry Info'); ?></h2>
+<h2><?php echo __('参加者詳細'); ?></h2>
 	<dl>
 		<dt><?php echo __('Id'); ?></dt>
 		<dd>
@@ -13,12 +13,12 @@
 		</dd>
 		<dt><?php echo __('Status'); ?></dt>
 		<dd>
-			<?php echo h($entryInfo['EntryInfo']['status']); ?>
+			<?php echo h($entryInfo['EntryInfo']['status_id']); ?>
 			&nbsp;
 		</dd>
 		<dt><?php echo __('Event Date'); ?></dt>
 		<dd>
-			<?php echo h($entryInfo['EntryInfo']['event_date']); ?>
+			<?php echo h(date('Y年n月j日', strtotime($entryInfo['EntryInfo']['event_date']))); ?>
 			&nbsp;
 		</dd>
 		<dt><?php echo __('Medical Instition No'); ?></dt>

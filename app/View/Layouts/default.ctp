@@ -18,7 +18,7 @@ $cakeDescription = __d('cake_dev', 'CakePHP: the rapid development php framework
 $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 ?>
 <!DOCTYPE html>
-<html>
+<html　lang="ja">
 <head>
 	<meta charset="utf-8">
     <title><?php echo $titleForLayout; ?></title>
@@ -32,6 +32,7 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 
 		echo $this->Html->css('cake.generic');
 		echo $this->Html->css('hs');
+		echo $this->Html->css('custom');
 
 		echo $this->fetch('meta');
 		echo $this->fetch('css');
@@ -43,8 +44,7 @@ $cakeVersion = __d('cake_dev', 'CakePHP %s', Configure::version())
 		<div id="header">
 			<h1>イベント管理システム</h1>
 			<div style="width:100%">
-			<?php echo $this->Html->link('イベント一覧', '/EventInfos', array('class' => 'pull-right')); ?>
-			<?php echo $this->Html->link('参加者一覧', '/EntryInfos', array('class' => 'pull-right')); ?>
+			<?php echo $this->Html->link('管理TOP', '/', array('class' => 'pull-right')); ?>
 		</div>
 		</div>
 		<div id="content">

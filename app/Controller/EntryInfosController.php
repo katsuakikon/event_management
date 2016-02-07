@@ -34,8 +34,43 @@ class EntryInfosController extends AppController {
  * @return void
  */
 	public function index() {
-		$this->EntryInfo->recursive = 0;
-		$this->set('entryInfos', $this->Paginator->paginate());
+		if ($this->Session->read('event_info_id')) {
+			$eventId = $this->Session->read('event_info_id');
+			$this->EntryInfo->recursive = 0;
+			$conditions = array('event_info_id' => $eventId);
+			$this->set('entryInfos', $this->Paginator->paginate($conditions));
+			$this->__setStatusBox(0);
+
+			$eventData = $this->EventInfo->find('first', array(
+					'conditions' => array(
+						'EventInfo.id' => $eventId)
+					)
+				);
+			$this->set('eventTitle', $eventData['EventInfo']['title']);
+
+			$notCnt = $this->EntryInfo->find('count', array(
+						'conditions' => array(
+						'EntryInfo.event_info_id' => $eventId,
+						'EntryInfo.status_id' => 0 
+						)
+					)
+				);
+			$allCnt = $this->EntryInfo->find('count', array(
+						'conditions' => array(
+						'EntryInfo.event_info_id' => $eventId
+						)
+					)
+				);
+
+			$this->set('allCnt', $allCnt);
+			$this->set('inCnt', $allCnt - $notCnt);
+
+		} else {
+			$this->EntryInfo->recursive = 0;
+			$this->set('entryInfos', $this->Paginator->paginate());
+			$this->__setStatusBox(0);
+		}
+		
 	}
 
 /**
@@ -51,6 +86,7 @@ class EntryInfosController extends AppController {
 		}
 		$options = array('conditions' => array('EntryInfo.' . $this->EntryInfo->primaryKey => $id));
 		$this->set('entryInfo', $this->EntryInfo->find('first', $options));
+		$this->__setStatusBox(0);
 	}
 
 /**
@@ -62,12 +98,22 @@ class EntryInfosController extends AppController {
 		if ($this->request->is('post')) {
 			$this->EntryInfo->create();
 			if ($this->EntryInfo->save($this->request->data)) {
-				$this->Session->setFlash(__('The entry info has been saved.'));
+				$this->Session->setFlash(__('登録しました'));
 				return $this->redirect(array('action' => 'index'));
 			} else {
-				$this->Session->setFlash(__('The entry info could not be saved. Please, try again.'));
+				$this->Session->setFlash(__('登録に失敗しました'));
 			}
 		}
+
+		$this->set('eventInfos', $this->EventInfo->find('list',
+				array(
+					'fields' => array('id', 'title')
+					)
+				)
+			);
+		$this->set('selected_event_info', $this->Session->read('event_info_id'));
+
+		$this->__setStatusBox(0);
 	}
 
 /**
@@ -83,14 +129,66 @@ class EntryInfosController extends AppController {
 		}
 		if ($this->request->is(array('post', 'put'))) {
 			if ($this->EntryInfo->save($this->request->data)) {
-				$this->Session->setFlash(__('The entry info has been saved.'));
+				$this->Session->setFlash(__('更新しました'));
 				return $this->redirect(array('action' => 'index'));
 			} else {
-				$this->Session->setFlash(__('The entry info could not be saved. Please, try again.'));
+				$this->Session->setFlash(__('更新に失敗しました'));
 			}
 		} else {
 			$options = array('conditions' => array('EntryInfo.' . $this->EntryInfo->primaryKey => $id));
 			$this->request->data = $this->EntryInfo->find('first', $options);
+
+			$this->__setStatusBox($this->request->data['EntryInfo']['status_id']);
+
+			$this->set('eventInfos', $this->EventInfo->find('list',
+				array(
+					'fields' => array('id', 'title')
+					)
+				)
+			);
+			$this->set('selected_event_info', $this->Session->read('event_info_id'));
+		}
+	}
+
+	public function updateByBarcode() {
+
+		if ($this->Session->read('event_info_id')) {
+			$barcode_id = $this->request->data['barcode'];
+
+			$eventId = $this->Session->read('event_info_id');
+			$entryData = $this->EntryInfo->find('first', array(
+							'conditions' => array(
+							'EntryInfo.event_info_id' => $eventId,
+							'EntryInfo.id' => intval($barcode_id)
+							)
+						)
+					);
+
+			if (isset($entryData) && count($entryData) == 1) {
+
+				if($entryData['EntryInfo']['status_id'] != 0) {
+					$this->Session->setFlash(__('対象者はすでに受付済みです'));
+					return $this->redirect(array('action' => 'index'));
+				}
+
+				$entryData['EntryInfo']['status_id'] = '1';
+
+				if ($this->EntryInfo->save($entryData)) {
+					$this->Session->setFlash(__($entryData['EntryInfo']['name'] . '様の受付をしました'));
+					return $this->redirect(array('action' => 'index'));
+				} else {
+					$this->Session->setFlash(__('更新に失敗しました'));
+					return $this->redirect(array('action' => 'index'));
+				}
+				
+				return $this->redirect(array('action' => 'index'));
+			} else {
+				$this->Session->setFlash(__('対象者は参加者一覧に存在しません'));
+				return $this->redirect(array('action' => 'index'));
+			}
+		} else {
+			$this->Session->setFlash(__('イベントを指定し、参加者一覧から入力してください'));
+			return $this->redirect(array('action' => 'index'));
 		}
 	}
 
@@ -108,9 +206,9 @@ class EntryInfosController extends AppController {
 		}
 		$this->request->allowMethod('post', 'delete');
 		if ($this->EntryInfo->delete()) {
-			$this->Session->setFlash(__('The entry info has been deleted.'));
+			$this->Session->setFlash(__('削除しました'));
 		} else {
-			$this->Session->setFlash(__('The entry info could not be deleted. Please, try again.'));
+			$this->Session->setFlash(__('削除に失敗しました'));
 		}
 		return $this->redirect(array('action' => 'index'));
 	}
@@ -184,7 +282,7 @@ class EntryInfosController extends AppController {
 		
 		// $data = $this->EntryInfo->getList();
 
-		$event_id = '1';
+		$event_id = $this->Session->read('event_info_id');
 		// ==================================
 
 		$eventInfo = $this->EventInfo->find(
@@ -193,13 +291,20 @@ class EntryInfosController extends AppController {
 			);
 
 		if (count($eventInfo) == 0) {
-			throw new NotFoundException(__('イベントデータがありません'));
+			$this->Session->setFlash(__('イベントデータがありません'));
+			return;
 		}
 
 		$entryInfo = $this->EntryInfo->find(
 			'all',
 			array('conditions' => array('EntryInfo.event_info_id' => $event_id))
 			);
+
+		if (count($entryInfo) == 0) {
+			$this->Session->setFlash(__('参加者情報がありません'));
+			return;
+		}
+
 
 		$eventData = $eventInfo[0]['EventInfo'];
 		$eventTime = date('Y年n月j日  G時i分 ～ ', strtotime($eventData['event_date']));
@@ -255,5 +360,10 @@ class EntryInfosController extends AppController {
 		// $this->set('test', base64_encode($image));
 		imagepng($image, FILE_BARCORD . $fileName);
 
+	}
+
+	public function __setStatusBox($status) {
+		$this->set('statuses', array('未入場', '受付済', '代理受付'));
+		$this->set('status_selected', $status);
 	}
 }

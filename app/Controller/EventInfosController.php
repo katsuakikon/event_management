@@ -102,4 +102,9 @@ class EventInfosController extends AppController {
 		}
 		return $this->redirect(array('action' => 'index'));
 	}
+
+	public function viewEntry() {
+		$this->Session->write('event_info_id', $this->request->data['event_info_id']);
+		return $this->redirect(array('controller' => 'EntryInfos', 'action' => 'index'));
+	}
 }
