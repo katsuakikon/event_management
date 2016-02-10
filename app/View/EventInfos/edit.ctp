@@ -21,7 +21,7 @@
 	<h3><?php echo __('Actions'); ?></h3>
 	<ul>
 
-		<li><?php echo $this->Form->postLink(__('Delete'), array('action' => 'delete', $this->Form->value('EventInfo.id')), array(), __('Are you sure you want to delete # %s?', $this->Form->value('EventInfo.id'))); ?></li>
-		<li><?php echo $this->Html->link(__('List Event Infos'), array('action' => 'index')); ?></li>
+		<li><?php echo $this->Form->postLink(__('削除'), array('action' => 'delete', $this->Form->value('EventInfo.id')), array(), __('次のIDのイベントを本当に削除しますか # %s?', $this->Form->value('EventInfo.id'))); ?></li>
+		<li><?php echo $this->Html->link(__('一覧'), array('action' => 'index')); ?></li>
 	</ul>
 </div>

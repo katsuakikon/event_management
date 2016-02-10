@@ -1,5 +1,6 @@
 <div class="eventInfos view">
 <h2><?php echo __('イベント詳細'); ?></h2>
+<div class="float-reset"></div>
 <div class="detail_dl">
 	<dl>
 		<dt><?php echo __('イベントID'); ?></dt>
@@ -60,7 +61,7 @@
 	<ul>
 		<li><?php echo $this->Html->link(__('編集'), array('action' => 'edit', $eventInfo['EventInfo']['id'])); ?> </li>
 		<li><?php echo $this->Form->postLink(__('削除'), array('action' => 'delete', $eventInfo['EventInfo']['id']), array(), __('次のIDのイベントを本当に削除しますか # %s?', $eventInfo['EventInfo']['id'])); ?> </li>
-		<li><?php echo $this->Html->link(__('一覧表示'), array('action' => 'index')); ?> </li>
+		<li><?php echo $this->Html->link(__('一覧'), array('action' => 'index')); ?> </li>
 		<li><?php echo $this->Html->link(__('新規作成'), array('action' => 'add')); ?> </li>
 	</ul>
 </div>

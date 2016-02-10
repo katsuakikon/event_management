@@ -80,28 +80,38 @@ class EntryInfo extends AppModel {
 			'event_info_id',
 			'event_date',
 			'medical_instition_no',
-			'participant_no',
 			'medical_instition',
+			'participant_no',
 			'department',
 			'post',
 			'name',
 			'tel_no1',
+			'tel_no2',
 			'mail_address',
 			'postal_code',
 			'address',
-			'remarks',
+			'remarks'
 			);
 
 		foreach ($data as $k1 => $v1) {
 			// 先頭行はヘッダのため除く
-			if ($k1 == 0) {
+			if ($k1 < 4) {
 				continue;
 			}
 			$newData = null;
 			$this->create();
-			
+
+			if (!isset($v1[0]) || $v1[0] == '') {
+				break;
+			}
 			foreach ($v1 as $k2 => $v2) {
-				if('event_date' === $columns[$k2]) {
+				if ($k2 >= 14) {
+					continue;
+				}
+				
+				if('event_info_id' === $columns[$k2]) {
+					$newData[$columns[$k2]] = intval($v2);
+				} else if('event_date' === $columns[$k2]) {
 					$display_date = PHPExcel_Style_NumberFormat::toFormattedString($v2, PHPExcel_Style_NumberFormat::FORMAT_DATE_YYYYMMDD2);
 					// $newData[$columns[$k2]] = date('Y-M-D', $display_date);
 					$newData[$columns[$k2]] = $display_date;
@@ -110,6 +120,7 @@ class EntryInfo extends AppModel {
 					$newData[$columns[$k2]] = $v2;
 				}
 			}
+
 			$this->save($newData);
 		}
 	}

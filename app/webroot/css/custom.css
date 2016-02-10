@@ -100,7 +100,7 @@ float: left;
 }
 
 .pdf-form {
-	float: right;
+	/*float: right;*/
 }
 
 .entryCount {
@@ -111,6 +111,7 @@ float: left;
 
 h2 {
 	float:left;
+	color: #000066;
 }
 
 .detail_dl {
@@ -118,13 +119,20 @@ h2 {
 }
 
 .barcodeDescription {
+	margin-top: 30px;
 	margin-left: 150px;
+	margin-bottom: 100px;
+	float:left;
+}
+
+.barcodeDescription2 {
 	float:left;
 }
 
 .barcodeForm {
 	float:left;
 	width: 200px;
+	margin-top: 30px;
 	margin-bottom: 2px;
 }
 
@@ -137,4 +145,16 @@ h2 {
 .list-update {
 	width: 70px !important;
 	float: right !important;
+}
+
+.botton-right {
+	float: right !important;
+}
+
+.one-line {
+	white-space: nowrap;
+}
+
+.font-color-red a {
+	color: red;
 }

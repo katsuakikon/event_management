@@ -2,6 +2,8 @@
 App::uses('AppController', 'Controller');
 
 App::import('Vendor', 'PHPExcel', array('file' => 'Classes' . DS . 'PHPExcel.php'));
+App::import( 'Vendor', 'PHPExcel_IOFactory', array('file'=>'Classes' . DS . 'PHPExcel' . DS . 'IOFactory.php') );
+App::import( 'Vendor', 'PHPExcel_Cell_AdvancedValueBinder', array('file'=>'Classes' . DS . 'PHPExcel' . DS . 'Cell' . DS . 'AdvancedValueBinder.php') );
 
 App::import('Vendor', 'Barcode2', array('file' => 'Image' . DS . 'Barcode2.php'));
 require APP . 'Vendor/autoload.php';
@@ -34,6 +36,8 @@ class EntryInfosController extends AppController {
  * @return void
  */
 	public function index() {
+		$this->set('titleForLayout', '参加者一覧');
+		$this->Paginator->settings = array('limit' => 300);
 		if ($this->Session->read('event_info_id')) {
 			$eventId = $this->Session->read('event_info_id');
 			$this->EntryInfo->recursive = 0;
@@ -66,9 +70,12 @@ class EntryInfosController extends AppController {
 			$this->set('inCnt', $allCnt - $notCnt);
 
 		} else {
+			$this->Session->setFlash(__('イベントが選択されていません。管理TOPから入りなおしてください。'));
 			$this->EntryInfo->recursive = 0;
 			$this->set('entryInfos', $this->Paginator->paginate());
 			$this->__setStatusBox(0);
+			$this->set('allCnt', 0);
+			$this->set('inCnt', 0);
 		}
 		
 	}
@@ -81,6 +88,7 @@ class EntryInfosController extends AppController {
  * @return void
  */
 	public function view($id = null) {
+		$this->set('titleForLayout', '参加者詳細');
 		if (!$this->EntryInfo->exists($id)) {
 			throw new NotFoundException(__('Invalid entry info'));
 		}
@@ -95,6 +103,7 @@ class EntryInfosController extends AppController {
  * @return void
  */
 	public function add() {
+		$this->set('titleForLayout', '参加者追加');
 		if ($this->request->is('post')) {
 			$this->EntryInfo->create();
 			if ($this->EntryInfo->save($this->request->data)) {
@@ -124,6 +133,7 @@ class EntryInfosController extends AppController {
  * @return void
  */
 	public function edit($id = null) {
+		$this->set('titleForLayout', '参加者編集');
 		if (!$this->EntryInfo->exists($id)) {
 			throw new NotFoundException(__('Invalid entry info'));
 		}
@@ -151,44 +161,70 @@ class EntryInfosController extends AppController {
 	}
 
 	public function updateByBarcode() {
+		$eventId = $this->Session->read('event_info_id');
+		$notCnt = $this->EntryInfo->find('count', array(
+					'conditions' => array(
+					'EntryInfo.event_info_id' => $eventId,
+					'EntryInfo.status_id' => 0 
+					)
+				)
+			);
+		$allCnt = $this->EntryInfo->find('count', array(
+					'conditions' => array(
+					'EntryInfo.event_info_id' => $eventId
+					)
+				)
+			);
 
-		if ($this->Session->read('event_info_id')) {
-			$barcode_id = $this->request->data['barcode'];
+		$this->set('allCnt', $allCnt);
+		$this->set('inCnt', $allCnt - $notCnt);
 
-			$eventId = $this->Session->read('event_info_id');
-			$entryData = $this->EntryInfo->find('first', array(
-							'conditions' => array(
-							'EntryInfo.event_info_id' => $eventId,
-							'EntryInfo.id' => intval($barcode_id)
+		$this->set('titleForLayout', '参加者受付');
+		
+		$eventData = $this->EventInfo->find('first', array(
+					'conditions' => array(
+						'EventInfo.id' => $eventId)
+					)
+				);
+		$this->set('eventTitle', $eventData['EventInfo']['title']);
+
+		if ($this->request->is(array('post', 'put'))) {
+			if ($this->Session->read('event_info_id')) {
+				$barcode_id = $this->request->data['barcode'];
+
+				$eventId = $this->Session->read('event_info_id');
+				$entryData = $this->EntryInfo->find('first', array(
+								'conditions' => array(
+								'EntryInfo.event_info_id' => $eventId,
+								'EntryInfo.id' => intval($barcode_id)
+								)
 							)
-						)
-					);
+						);
 
-			if (isset($entryData) && count($entryData) == 1) {
+				if (isset($entryData) && count($entryData) == 1) {
+					if($entryData['EntryInfo']['status_id'] != 0) {
+						$this->Session->setFlash(__('対象者はすでに受付済みです'));
+						return;
+					}
 
-				if($entryData['EntryInfo']['status_id'] != 0) {
-					$this->Session->setFlash(__('対象者はすでに受付済みです'));
-					return $this->redirect(array('action' => 'index'));
-				}
+					$entryData['EntryInfo']['status_id'] = '1';
 
-				$entryData['EntryInfo']['status_id'] = '1';
-
-				if ($this->EntryInfo->save($entryData)) {
-					$this->Session->setFlash(__($entryData['EntryInfo']['name'] . '様の受付をしました'));
-					return $this->redirect(array('action' => 'index'));
+					if ($this->EntryInfo->save($entryData)) {
+						$this->Session->setFlash(__($entryData['EntryInfo']['name'] . '様の受付をしました'));
+						return;
+					} else {
+						$this->Session->setFlash(__('更新に失敗しました'));
+						return;
+					}
+					
 				} else {
-					$this->Session->setFlash(__('更新に失敗しました'));
-					return $this->redirect(array('action' => 'index'));
+					$this->Session->setFlash(__('対象者は参加者一覧に存在しません'));
+					return;
 				}
-				
-				return $this->redirect(array('action' => 'index'));
 			} else {
-				$this->Session->setFlash(__('対象者は参加者一覧に存在しません'));
-				return $this->redirect(array('action' => 'index'));
+				$this->Session->setFlash(__('イベントを指定し、参加者一覧から入力してください'));
+				return;
 			}
-		} else {
-			$this->Session->setFlash(__('イベントを指定し、参加者一覧から入力してください'));
-			return $this->redirect(array('action' => 'index'));
 		}
 	}
 
@@ -200,6 +236,7 @@ class EntryInfosController extends AppController {
  * @return void
  */
 	public function delete($id = null) {
+		$this->set('titleForLayout', '参加者削除');
 		$this->EntryInfo->id = $id;
 		if (!$this->EntryInfo->exists()) {
 			throw new NotFoundException(__('Invalid entry info'));
@@ -222,20 +259,6 @@ class EntryInfosController extends AppController {
 		// GETは処理しない
 		if ($this->request->is('post')) {
 			$this->__fileImport($this->request->data['EntryInfo']['content']);
-
-			// // 新規データセットをDataManagerに登録する
-			// $this->DataManager->create();
-			// if ($this->DataManager->save($this->request->data['DataManager'])) {
-			// 	// 登録が成功した場合はアップロードしたファイルから子テーブルの作成を実行する
-			// 	$this->__fileImport($this->request->data['DataTable']['content'], $this->DataManager->id);
-
-			// 	// 登録完了後のメッセージをセットする
-			// 	$this->Session->setFlash(__('The data manager has been saved.'));
-			// 	// 登録完了後の遷移先ページを設定する
-			// 	return $this->redirect(array('action' => 'index'));
-			// } else {
-			// 	$this->Session->setFlash(__('The data manager could not be saved. Please, try again.'));
-			// }
 		}
 		$this->set('titleForLayout', 'エクセルインポート');
 	}
@@ -266,23 +289,18 @@ class EntryInfosController extends AppController {
 			$j++;
 		}
 
-		// var_dump($data);
-		// $date = date('Y-m-d H:i:s', ($data[0][3] - 25569) * 60 * 60 * 24);
-//****** 日付変換参考
-		// $display_date = PHPExcel_Style_NumberFormat::toFormattedString($data[0][3], PHPExcel_Style_NumberFormat::FORMAT);
-
-		// var_dump($display_date);
 		// データ登録処理
 		$this->EntryInfo->insertData($data);
 	}
 
-	public function createPDF($event_id = null, $entry_array = null) {
-
+	public function createPDF() {
+		
 		// ==================================
 		
 		// $data = $this->EntryInfo->getList();
 
 		$event_id = $this->Session->read('event_info_id');
+		$entry_ids = $this->request->data['check'];
 		// ==================================
 
 		$eventInfo = $this->EventInfo->find(
@@ -297,7 +315,7 @@ class EntryInfosController extends AppController {
 
 		$entryInfo = $this->EntryInfo->find(
 			'all',
-			array('conditions' => array('EntryInfo.event_info_id' => $event_id))
+			array('conditions' => array('EntryInfo.event_info_id' => $event_id, 'EntryInfo.id' => $entry_ids))
 			);
 
 		if (count($entryInfo) == 0) {
@@ -305,15 +323,15 @@ class EntryInfosController extends AppController {
 			return;
 		}
 
-
 		$eventData = $eventInfo[0]['EventInfo'];
 		$eventTime = date('Y年n月j日  G時i分 ～ ', strtotime($eventData['event_date']));
 		$eventTime = $eventTime . date('G時i分', strtotime($eventData['event_end_date']));
+		$publishedTime = date('Y年n月j日', strtotime($eventData['published_date']));
 
 		foreach ($entryInfo as $k => $v) {
 			$userName = str_replace(' ', '', $v['EntryInfo']['name']);
 			$userName = str_replace('　', '', $userName);
-			$baseFileName = 'ENTRY_' . trim($v['EntryInfo']['medical_instition']) . '_' . trim($userName) . '様.pdf';
+			$baseFileName = 'ENTRY_ID' . $v['EntryInfo']['id'] . '_' . trim($v['EntryInfo']['medical_instition']) . '_' . trim($userName) . '様.pdf';
 			$fileName = mb_convert_encoding($baseFileName, 'sjis-win', 'UTF-8');
 			$barcode_id = str_pad($v['EntryInfo']['id'], 12, 0, STR_PAD_LEFT);
 			$barcode_file = 'BC_' . $barcode_id . 'png';
@@ -324,6 +342,7 @@ class EntryInfosController extends AppController {
 
 			// イベント情報
 			$page = $report->addPage();
+			$page->item('published_date')->setValue($publishedTime);
 			$page->item('event_title')->setValue($eventData['title']);
 			$page->item('main_text')->setValue($eventData['main_text']);
 			$page->item('event_date')->setValue($eventTime);
@@ -365,5 +384,82 @@ class EntryInfosController extends AppController {
 	public function __setStatusBox($status) {
 		$this->set('statuses', array('未入場', '受付済', '代理受付'));
 		$this->set('status_selected', $status);
+	}
+
+	public function outputEntrylist() {
+
+		$event_id = $this->Session->read('event_info_id');
+		$entryInfo = $this->EntryInfo->find(
+			'all',
+			array('conditions' => array('EntryInfo.event_info_id' => $event_id))
+			);
+		if (count($entryInfo) == 0) {
+			$this->Session->setFlash(__('参加者情報がありません'));
+			return;
+		}
+
+		$book = new PHPExcel();
+
+		$book->setActiveSheetIndex(0);
+    	$sheet = $book->getActiveSheet();
+    	$sheet->setTitle('参加者一覧');
+
+    	$sheet->setCellValue('A1', '開催情報マスタNo');
+		$sheet->setCellValue('B1', '状態');
+		$sheet->setCellValue('C1', '開催日');
+		$sheet->setCellValue('D1', '医療機関No.');
+		$sheet->setCellValue('E1', '医療機関名');
+		$sheet->setCellValue('F1', '参加者No.');
+		$sheet->setCellValue('G1', '所属');
+		$sheet->setCellValue('H1', '役職');
+		$sheet->setCellValue('I1', '氏名');
+		$sheet->setCellValue('J1', '電話番号1');
+		$sheet->setCellValue('K1', '電話番号2');
+		$sheet->setCellValue('L1', 'FAX');
+		$sheet->setCellValue('M1', 'メールアドレス');
+		$sheet->setCellValue('N1', '郵便番号');
+		$sheet->setCellValue('O1', '住所');
+		$sheet->setCellValue('P1', '備考');
+
+		$status = array('未入場', '受付済', '代理受付');
+
+    	$cnt_c = 2;
+    	foreach($entryInfo as $k => $v ){
+    		$read_date = date('Y-M-d', strtotime($v['EntryInfo']['event_date']));
+			$display_date = PHPExcel_Shared_Date::PHPToExcel(new DateTime($read_date));
+			$sheet->getStyle('C'.$cnt_c)->getNumberFormat()->setFormatCode(PHPExcel_Style_NumberFormat::FORMAT_DATE_YYYYMMDDSLASH);
+
+    		$sheet->setCellValue('A'.$cnt_c, $v['EntryInfo']['event_info_id']);
+			$sheet->setCellValue('B'.$cnt_c, $status[intval($v['EntryInfo']['status_id'])]);
+			$sheet->setCellValue('C'.$cnt_c, $display_date);
+			$sheet->setCellValue('D'.$cnt_c, $v['EntryInfo']['medical_instition_no']);
+			$sheet->setCellValue('E'.$cnt_c, $v['EntryInfo']['medical_instition']);
+			$sheet->setCellValue('F'.$cnt_c, $v['EntryInfo']['participant_no']);
+			$sheet->setCellValue('G'.$cnt_c, $v['EntryInfo']['department']);
+			$sheet->setCellValue('H'.$cnt_c, $v['EntryInfo']['post']);
+			$sheet->setCellValue('I'.$cnt_c, $v['EntryInfo']['name']);
+			$sheet->setCellValue('J'.$cnt_c, $v['EntryInfo']['tel_no1']);
+			$sheet->setCellValue('K'.$cnt_c, $v['EntryInfo']['tel_no2']);
+			$sheet->setCellValue('L'.$cnt_c, $v['EntryInfo']['fax']);
+			$sheet->setCellValue('M'.$cnt_c, $v['EntryInfo']['mail_address']);
+			$sheet->setCellValue('N'.$cnt_c, $v['EntryInfo']['postal_code']);
+			$sheet->setCellValue('O'.$cnt_c, $v['EntryInfo']['address']);
+			$sheet->setCellValue('P'.$cnt_c, $v['EntryInfo']['remarks']);
+
+			$cnt_c++;
+		}
+
+
+
+		$objWriter = new PHPExcel_Writer_Excel2007($book);
+		header("Pragma: public");
+		header("Expires: 0");
+		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+		header("Content-Type: application/force-download");
+		header("Content-Type: application/octet-stream");
+		header("Content-Type: application/download");
+		header("Content-Disposition: attachment;filename=entry_export.xlsx");
+		header("Content-Transfer-Encoding: binary ");
+		$objWriter->save('php://output');
 	}
 }

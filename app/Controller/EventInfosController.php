@@ -22,6 +22,7 @@ class EventInfosController extends AppController {
  * @return void
  */
 	public function index() {
+		$this->set('titleForLayout', 'イベント一覧');
 		$this->EventInfo->recursive = 0;
 		$this->set('eventInfos', $this->Paginator->paginate());
 	}
@@ -34,6 +35,7 @@ class EventInfosController extends AppController {
  * @return void
  */
 	public function view($id = null) {
+		$this->set('titleForLayout', 'イベント詳細');
 		if (!$this->EventInfo->exists($id)) {
 			throw new NotFoundException(__('Invalid event info'));
 		}
@@ -47,6 +49,7 @@ class EventInfosController extends AppController {
  * @return void
  */
 	public function add() {
+		$this->set('titleForLayout', 'イベント追加');
 		if ($this->request->is('post')) {
 			$this->EventInfo->create();
 			if ($this->EventInfo->save($this->request->data)) {
@@ -66,6 +69,7 @@ class EventInfosController extends AppController {
  * @return void
  */
 	public function edit($id = null) {
+		$this->set('titleForLayout', 'イベント編集');
 		if (!$this->EventInfo->exists($id)) {
 			throw new NotFoundException(__('Invalid event info'));
 		}
@@ -90,6 +94,7 @@ class EventInfosController extends AppController {
  * @return void
  */
 	public function delete($id = null) {
+		$this->set('titleForLayout', 'イベント削除');
 		$this->EventInfo->id = $id;
 		if (!$this->EventInfo->exists()) {
 			throw new NotFoundException(__('Invalid event info'));
