@@ -37,7 +37,10 @@ class EntryInfosController extends AppController {
  */
 	public function index() {
 		$this->set('titleForLayout', '参加者一覧');
-		$this->Paginator->settings = array('limit' => 300);
+		$this->Paginator->settings = array(
+				'limit' => 300,
+				'order' => array('EntryInfo.status_id' => 'asc', 'EntryInfo.id' => 'asc')
+				);
 		if ($this->Session->read('event_info_id')) {
 			$eventId = $this->Session->read('event_info_id');
 			$this->EntryInfo->recursive = 0;
@@ -108,6 +111,7 @@ class EntryInfosController extends AppController {
 			$this->EntryInfo->create();
 			if ($this->EntryInfo->save($this->request->data)) {
 				$this->Session->setFlash(__('登録しました'));
+				$this->Session->write('event_info_id', $this->request->data['EntryInfo']['event_info_id']);
 				return $this->redirect(array('action' => 'index'));
 			} else {
 				$this->Session->setFlash(__('登録に失敗しました'));
@@ -139,6 +143,7 @@ class EntryInfosController extends AppController {
 		}
 		if ($this->request->is(array('post', 'put'))) {
 			if ($this->EntryInfo->save($this->request->data)) {
+				$this->Session->write('event_info_id', $this->request->data['EntryInfo']['event_info_id']);
 				$this->Session->setFlash(__('更新しました'));
 				return $this->redirect(array('action' => 'index'));
 			} else {
@@ -211,7 +216,7 @@ class EntryInfosController extends AppController {
 
 					if ($this->EntryInfo->save($entryData)) {
 						$this->Session->setFlash(__($entryData['EntryInfo']['name'] . '様の受付をしました'));
-						return;
+						return $this->redirect(array('action' => 'updateByBarcode'));;
 					} else {
 						$this->Session->setFlash(__('更新に失敗しました'));
 						return;
@@ -259,6 +264,8 @@ class EntryInfosController extends AppController {
 		// GETは処理しない
 		if ($this->request->is('post')) {
 			$this->__fileImport($this->request->data['EntryInfo']['content']);
+
+			$this->Session->setFlash(__('取り込み完了しました。'));
 		}
 		$this->set('titleForLayout', 'エクセルインポート');
 	}
@@ -375,7 +382,7 @@ class EntryInfosController extends AppController {
 		// 8.回転
 
 		$code = new Image_Barcode2();
-		$image = $code->draw($id, 'code128', 'png', false);
+		$image = $code->draw('000537', 'code128', 'png', false);
 		// $this->set('test', base64_encode($image));
 		imagepng($image, FILE_BARCORD . $fileName);
 

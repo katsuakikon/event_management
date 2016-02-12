@@ -18,8 +18,8 @@
        		)
 		);
 		echo $this->Form->input('event_date', array('label' => 'イベント日時'));
-		echo $this->Form->input('medical_instition_no', array('label' => '医療機関No'));
-		echo $this->Form->input('participant_no', array('label' => '参加者No'));
+		echo $this->Form->input('medical_instition_no', array('label' => '医療機関No', 'maxlength' => 3, 'class' => "short_input", 'required' => "required"));
+		echo $this->Form->input('participant_no', array('label' => '参加者No', 'max' => 99, 'class' => "short_input", 'required' => "required"));
 		echo $this->Form->input('medical_instition', array('label' => '医療機関名'));
 		echo $this->Form->input('department', array('label' => '部署'));
 		echo $this->Form->input('post', array('label' => '役職'));

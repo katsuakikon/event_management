@@ -18,7 +18,7 @@
 				)
 			);
 		?>
-		<input type="text" name="barcode" class="fm">
+		<input type="text" id="in_barcode" name="barcode" class="fm">
 		</form>
 	</div>
 </div>

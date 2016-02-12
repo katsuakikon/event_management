@@ -108,7 +108,7 @@ class EntryInfo extends AppModel {
 				if ($k2 >= 14) {
 					continue;
 				}
-				
+				var_dump($v2);
 				if('event_info_id' === $columns[$k2]) {
 					$newData[$columns[$k2]] = intval($v2);
 				} else if('event_date' === $columns[$k2]) {

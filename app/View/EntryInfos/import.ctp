@@ -1,5 +1,6 @@
 <div class="entryInfos form">
 <h2>参加者ファイルインポート(xlsx)</h2>
+<div class="float-reset"></div>
 <div class="normal_message">
 取り込むファイルには事前に作成したイベントのIDを必ず付与してください
 </div>
@@ -15,3 +16,5 @@
 		<li><?php echo $this->Html->link(__('参加者一覧'), array('action' => 'index')); ?></li>
 	</ul>
 </div>
+
+<?php echo $this->Html->script('import_submit'); ?>

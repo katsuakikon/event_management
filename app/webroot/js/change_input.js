@@ -1,4 +1,7 @@
 "use strict";
+$(document).ready(function(){
+	$("#in_barcode").focus();
+});
 
 $(function() {
 	$('.fm').change(function(){
